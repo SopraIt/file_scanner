@@ -22,6 +22,6 @@ describe FileScanner::Loader do
 
   it "must collect files in path with specified extensions" do
     instance = FileScanner::Loader.new(path: path, extensions: %w[jpg gif])
-    instance.call.size.must_equal Stubs.files.size
+    instance.call.sort.must_equal Stubs.files.map(&:path).sort 
   end
 end
