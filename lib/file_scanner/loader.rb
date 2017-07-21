@@ -6,7 +6,7 @@ module FileScanner
     end
 
     def call
-      @files ||= Dir.glob(files_path)
+      Dir.glob(files_path)
     end
 
     private def files_path

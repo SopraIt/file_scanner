@@ -12,6 +12,10 @@ module Stubs
     end.flatten 
   end
 
+  def paths
+    files.map { |f| f.path }
+  end
+
   def dirname
     files.map { |f| File.dirname(f) }.uniq.last
   end
