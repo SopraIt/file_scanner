@@ -1,5 +1,3 @@
-require "file_scanner/loader"
-require "file_scanner/filter"
 require "logger"
 
 module FileScanner
@@ -8,7 +6,7 @@ module FileScanner
 
     attr_reader :policies
 
-    def initialize(loader:, filter:, policies: [], logger: Logger.new(nil), slice_size: DEFAULT_SIZE)
+    def initialize(loader:, filter: Filter.new, policies: [], logger: Logger.new(nil), slice_size: DEFAULT_SIZE)
       @loader = loader
       @filter = filter
       @policies = policies
@@ -24,6 +22,9 @@ module FileScanner
           policy.call(slice)
         end
       end.flatten
+    rescue StandardError => e
+      @logger.error(e.message)
+      raise e
     end
 
     private def files
