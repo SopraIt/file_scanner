@@ -4,15 +4,21 @@ describe FileScanner::Worker do
   let(:loader) { -> { Stubs.paths } }
   let(:filter) { ->(file) { true } }
 
-  it "must yield slice of files on given block" do
+  it "must yield all the paths if no slice size is specified" do
+    instance = FileScanner::Worker.new(loader: loader, filter: filter)
+    instance.call do |files|
+      files.size.must_equal Stubs.paths.size
+    end
+  end
+
+  it "must yield slice of paths on given block" do
     instance = FileScanner::Worker.new(loader: loader, filter: filter, slice_size: 5)
     instance.call do |files|
-      files.all? { |f| File.exist?(f) }.must_equal true
       files.size.must_equal 5
     end
   end
 
-  it "must call policies for each slice of files" do
+  it "must call policies for each slice of paths" do
     policies = []
     policies << ->(slice) { :delete_cache }
     policies << ->(slice) { :remove_from_disk }

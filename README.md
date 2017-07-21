@@ -52,9 +52,9 @@ filter = FileScanner::Filter.new(last_atime: Time.now - 7*3600*24, min_size: 102
 ### Policies
 You can now create your custom policies objects, the only constraint is that they must respond to the `call` method and accept an array of file path as the unique argument:
 ```ruby
-# remove file from disk policy
 policies = []
 
+# remove file from disk policy
 remove_from_disk = ->(files) do
   require "fileutils"
   FileUtils.rm_rf(files)
@@ -67,26 +67,23 @@ policies << remove_from_disk
 Now that you have all of the collaborators in place, you can create the `Worker` instance:
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, filter: filter, policies: policies)
-
-# apply all the specified policies to the files
-worker.call
+worker.call # apply all the specified policies to the files
 ```
 
-#### Specify a slice size
+#### Slice of files
 In case you are going to scan a large number of files, is better to do your work in batches.  
 This is exactly why the `Worker` class accept a `slice_size` attribute, so it can distribute the work and avoid saturating the resources used by the specified policies:
 ```ruby
-# slice size default to 200
 worker = FileScanner::Worker.new(loader: loader, filter: filter, policies: policies, slice_size: 1000)
-worker.call
+worker.call # call policies by slice of 1000 files
 ```
 
 #### Policies by block
-In case you prefer to specify the policies as a block yielding the file paths, you can omit the `policies` argument at all:
+In case you prefer to specify the policies as a block yielding the files slice, you can omit the `policies` argument at all:
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, filter: filter)
 worker.call do |slice|
-  # call your policies here yielding the slice of file paths
+  # call your policies here yielding the files slice
 end
 ```
 
