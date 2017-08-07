@@ -11,6 +11,8 @@ Gem::Specification.new do |s|
   s.summary = "A scanner routine that collect files basing on specified filters and apply to them a set of custom policies"
   s.files = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(spec|test|s|features)/}) }
   s.require_paths = ["lib"]
+  s.license = "MIT"
+  s.required_ruby_version = ">= 2.1.2"
 
   s.add_development_dependency "bundler", "~> 1.15"
   s.add_development_dependency "rake", "~> 10.0"
