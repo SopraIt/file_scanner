@@ -1,7 +1,7 @@
 module FileScanner
   class Loader
     def initialize(path:, extensions: [])
-      @path = path
+      @path = File.expand_path(path)
       @extensions = extensions
     end
 

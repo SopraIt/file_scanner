@@ -48,15 +48,18 @@ The second step is to provide the filters list to select files for which the `ca
 If you specify no filters the existing onee will select files by:
 * checking if file is older than *30 days* 
 * checking if file size is *smaller than 100 bytes*
+* checking if file *basename matches* the specified *regexp* (match all names by default)
 
 You can configure default behaviour by passing different arguments:
 ```ruby
 accessed_a_week_ago = FileScanner::Filters::LastAccess.new(Time.now-7*24*3600)
 one_to_two_mega = FileScanner::Filters::SizeRange.new(min: 1024**2, max: 2*1024**2)
+hidden = FileScanner::Filters::MatchingName.new(/^\./)
 
 filters = []
 filters << accessed_a_week_ago
 filters << one_to_two_mega
+filters << hidden
 ```
 
 #### Custom

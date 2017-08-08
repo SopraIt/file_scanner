@@ -1,4 +1,7 @@
+require "file_scanner/refinements"
+
 module FileScanner
+  using Refinements
   module Filters
     def self.defaults
       constants.map do |name|
@@ -15,6 +18,23 @@ module FileScanner
 
       def call(file)
         @atime >= File.atime(file)
+      end
+    end
+
+    class MatchingName
+      def initialize(regexp = nil)
+        @regexp = compile(regexp)
+      end
+
+      def call(file)
+        return true unless @regexp
+        File.basename(file).matches?(@regexp)
+      end
+
+      private def compile(regexp)
+        return unless regexp
+        return regexp if regexp.is_a?(Regexp)
+        Regexp.compile(regexp.to_s)
       end
     end
 
