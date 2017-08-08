@@ -43,35 +43,35 @@ loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
 
 ### Filters
 The second step is to provide the filters list to select file paths for which the `call` method is truthy.  
-Selection is done with the `any?` method, so also one matching filter will select the path.
+Selection is done with the `any?` predicate, so also one matching filter will select the path.
 
 #### Default
-If you specify no filters the existing onee will select files by:
+If you specify no filters the existing ones will select files by:
 * checking if file is older than *30 days* 
 * checking if file size is within *0KB and 5KB*
-* checking if file *basename matches* the specified *regexp* (match all names by default)
+* checking if file *basename matches* the specified *regexp* (if any)
 
-You can configure default behaviour by passing different arguments:
+You can update default behaviours by passing custom arguments:
 ```ruby
-accessed_a_week_ago = FileScanner::Filters::LastAccess.new(Time.now-7*24*3600)
-one_to_two_mega = FileScanner::Filters::SizeRange.new(min: 1024**2, max: 2*1024**2)
+a_week_ago = FileScanner::Filters::LastAccess.new(Time.now-7*24*3600)
+one_two_mb = FileScanner::Filters::SizeRange.new(min: 1024**2, max: 2*1024**2)
 hidden = FileScanner::Filters::MatchingName.new(/^\./)
 
 filters = []
-filters << accessed_a_week_ago
-filters << one_to_two_mega
+filters << a_week_ago
+filters << one_two_mb
 filters << hidden
 ```
 
 #### Custom
-It is convenient to create custom filters by just relying on `Proc` instances that satisfy the `callable` protocol:
+It is convenient to create custom filters by creating `Proc` instances that satisfy the `callable` protocol:
 ```ruby
 filters << ->(file) { File.directory?(file) }
 ```
 
 ### Policies
 The third step is creating custom policies objects (no defaults exist) to be applied to the list of filtered paths.  
-Again, it suffice the policy responds to the `call` method and accept an array of paths as an argument:
+Again, it suffice the policy responds to the `call` method and accepts an array of paths as unique argument:
 ```ruby
 require "fileutils"
 
@@ -113,6 +113,7 @@ end
 If you dare to trace what the worker is doing (including errors), you can specify a logger to the worker class:
 ```ruby
 my_logger = Logger.new("my_file.log")
+
 worker = FileScanner::Worker.new(loader: loader, logger: my_logger)
 worker.call do |slice|
   fail "Doh!" # will log error to my_file.log and re-raise exception
