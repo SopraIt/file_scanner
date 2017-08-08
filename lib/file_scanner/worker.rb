@@ -4,7 +4,7 @@ module FileScanner
   class Worker
     attr_reader :filters, :policies
 
-    def initialize(loader:, filters: [], policies: [], logger: Logger.new(nil), slice: nil)
+    def initialize(loader:, filters: Filters::defaults, policies: [], logger: Logger.new(nil), slice: nil)
       @loader = loader
       @filters = filters
       @policies = policies

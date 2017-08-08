@@ -1,7 +1,9 @@
 module FileScanner
   module Filters
-    def self.all
-      constants
+    def self.defaults
+      constants.map do |name|
+        self.const_get(name).new
+      end
     end
 
     class LastAccess

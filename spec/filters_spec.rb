@@ -1,6 +1,12 @@
 require "helper"
 
 describe FileScanner::Filters do
+  it "must return default instances" do
+    filters = FileScanner::Filters.defaults
+    filters.first.must_be_instance_of FileScanner::Filters::LastAccess
+    filters.last.must_be_instance_of FileScanner::Filters::SizeRange
+  end
+
   describe FileScanner::Filters::LastAccess do
     it "must exclude files last accessed after specified time" do
       filter = FileScanner::Filters::LastAccess.new
