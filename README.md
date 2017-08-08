@@ -5,13 +5,12 @@
 * [Installation](#installation)
 * [Usage](#usage)
   * [Loader](#loader)
-  * [Filter](#filter)
+  * [Filters](#filters)
   * [Policies](#policies)
   * [Worker](#worker)
 
 ## Scope
-This gem is aimed to collect a set of files by specified path and extensions), filter them by custom policies (creation and access times, filesize, etc)
-and apply a set of custom actions to them in the fashion of a callable proc accepting an arrray of paths.
+This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by default/custom filters (access time, size range) and apply a set of custom policies to them.
 
 ## Motivation
 This gem is helpful to purge obsolete files or to promote relevant ones, by calling external services (CDN APIs) and/or local file system actions (copy, move, delete, etc).
@@ -42,39 +41,56 @@ require "file_scanner"
 loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
 ```
 
-### Filter
-The second step, optional, is to configure the `Filter` instance by specifying the last access time (default to 30 days ago) and the min size in bytes (default to 0 bytes): 
+### Filters
+The second step is to provide the filters list to select files for which the `call` method is truthy.  
+
+#### Default
+You can rely on existing filters that select files by:
+* checking if file is older than *30 days* 
+* checking if file size is *smaller than 100 bytes*
+
+You can configure default behaviour by passing different arguments:
 ```ruby
-# detect file last accessed more than a week ago with a size smaller than 1 MB
-filter = FileScanner::Filter.new(last_atime: Time.now - 7*3600*24, min_size: 1024*1024)
+accessed_a_week_ago = FileScanner::Filters::LastAccess.new(Time.now-7*24*3600)
+one_to_two_mega = FileScanner::Filters::SizeRange.new(min: 1024**2, max: 2*1024**2)
+
+filters = []
+filters << accessed_a_week_ago
+filters << one_to_two_mega
+```
+
+#### Custom
+It is convenient to create custom filters by just relying on `Proc` instances that satisfy the `callable` protocol:
+```ruby
+filters << ->(file) { File.directory?(file) }
 ```
 
 ### Policies
-You can now create your custom policies objects, the only constraint is that they must respond to the `call` method and accept an array of file path as the unique argument:
+The third step is creating custom policies objects (no default exist) to be applied to the list of filtered paths.  
+Again, it suffice the policy responds to the `call` method and accept an array of paths as an argument:
 ```ruby
-policies = []
+require "fileutils"
 
-# remove file from disk policy
-remove_from_disk = ->(files) do
-  require "fileutils"
-  FileUtils.rm_rf(files)
+remove_from_disk = ->(paths) do
+  FileUtils.rm_rf(paths)
 end
 
+policies = []
 policies << remove_from_disk
 ```
 
 ### Worker
 Now that you have all of the collaborators in place, you can create the `Worker` instance:
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filter: filter, policies: policies)
-worker.call # apply all the specified policies to the files
+worker = FileScanner::Worker.new(loader: loader, filters: filters, policies: policies)
+worker.call # apply all the specified policies to the filtered file paths
 ```
 
 #### Slice of files
-In case you are going to scan a large number of files, is better to do your work in batches.  
-This is exactly why the `Worker` class accept a `slice_size` attribute, so it can distribute the work and avoid saturating the resources used by the specified policies:
+In case you are going to scan a large number of files, is better to work in batches.  
+This is exactly why the `Worker` class accept a `slice` attribute to distribute the work and avoid saturating the resources used by the specified policies:
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filter: filter, policies: policies, slice_size: 1000)
+worker = FileScanner::Worker.new(loader: loader, filter: filter, policies: policies, slice: 1000)
 worker.call # call policies by slice of 1000 files
 ```
 
@@ -83,7 +99,7 @@ In case you prefer to specify the policies as a block yielding the files slice, 
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, filter: filter)
 worker.call do |slice|
-  # call your policies here yielding the files slice
+  ->(slice) { FileUtils.chmod_R(0700, slice) }.call
 end
 ```
 

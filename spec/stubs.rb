@@ -19,4 +19,8 @@ module Stubs
   def dirname
     files.map { |f| File.dirname(f) }.uniq.last
   end
+
+  def policies(n = 5)
+    Array.new(n) { Minitest::Mock.new }
+  end
 end
