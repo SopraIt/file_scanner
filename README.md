@@ -10,7 +10,7 @@
   * [Worker](#worker)
 
 ## Scope
-This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by default/custom filters (access time, size range) and apply a set of custom policies to them.
+This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any default/custom filters (access time, size range) and apply a set of custom policies to them.
 
 ## Motivation
 This gem is helpful to purge obsolete files or to promote relevant ones, by calling external services (CDN APIs) and/or local file system actions (copy, move, delete, etc).
@@ -42,12 +42,13 @@ loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
 ```
 
 ### Filters
-The second step is to provide the filters list to select files for which the `call` method is truthy.  
+The second step is to provide the filters list to select file paths for which the `call` method is truthy.  
+Selection is done with the `any?` method, so also one matching filter will select the path.
 
 #### Default
 If you specify no filters the existing onee will select files by:
 * checking if file is older than *30 days* 
-* checking if file size is *smaller than 100 bytes*
+* checking if file size is within *0KB and 5KB*
 * checking if file *basename matches* the specified *regexp* (match all names by default)
 
 You can configure default behaviour by passing different arguments:

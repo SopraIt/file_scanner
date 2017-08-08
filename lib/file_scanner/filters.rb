@@ -27,19 +27,18 @@ module FileScanner
       end
 
       def call(file)
-        return true unless @regexp
+        return unless @regexp
         File.basename(file).matches?(@regexp)
       end
 
       private def compile(regexp)
         return unless regexp
-        return regexp if regexp.is_a?(Regexp)
         Regexp.compile(regexp.to_s)
       end
     end
 
     class SizeRange
-      def initialize(min: 100, max: Float::INFINITY)
+      def initialize(min: 0, max: 5*1024)
         @range = min..max
       end
 

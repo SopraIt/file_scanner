@@ -4,7 +4,15 @@ module FileScanner
   class Worker
     attr_reader :filters, :policies
 
-    def initialize(loader:, filters: Filters::defaults, policies: [], logger: Logger.new(nil), slice: nil)
+    def self.default_logger
+      Logger.new(nil).tap do |logger|
+        logger.level = Logger::ERROR
+      end
+    end
+
+    def initialize(loader:, 
+                   filters: Filters::defaults, policies: [], 
+                   logger: self.class.default_logger, slice: nil)
       @loader = loader
       @filters = filters
       @policies = policies
@@ -16,7 +24,7 @@ module FileScanner
       slices.each do |slice|
         yield(slice) if block_given? && policies.empty?
         policies.each do |policy|
-          @logger.info { "applying \e[1m#{policy}\e[0m to \e[1m#{slice.size}\e[0m files" }
+          @logger.info { "applying \e[33m#{policy}\e[0m to #{slice.size} files" }
           policy.call(slice)
         end
       end
@@ -26,9 +34,9 @@ module FileScanner
     end
 
     private def files
-      @files ||= Array(@loader.call).select do |f|
-        @filters.all? do |filter|
-          @logger.info { "applying \e[1m#{filter.class}\w[0m to \e[1m#{File.basename(f)}\e[0m" }
+      Array(@loader.call).select do |f|
+        @filters.any? do |filter|
+          @logger.info { "applying \e[35m#{filter}\e[0m to #{File.basename(f)}" }
           filter.call(f)
         end
       end
