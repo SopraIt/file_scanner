@@ -45,7 +45,7 @@ loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
 The second step is to provide the filters list to select files for which the `call` method is truthy.  
 
 #### Default
-You can rely on existing filters that select files by:
+If you specify no filters the existing onee will select files by:
 * checking if file is older than *30 days* 
 * checking if file size is *smaller than 100 bytes*
 
@@ -66,7 +66,7 @@ filters << ->(file) { File.directory?(file) }
 ```
 
 ### Policies
-The third step is creating custom policies objects (no default exist) to be applied to the list of filtered paths.  
+The third step is creating custom policies objects (no defaults exist) to be applied to the list of filtered paths.  
 Again, it suffice the policy responds to the `call` method and accept an array of paths as an argument:
 ```ruby
 require "fileutils"
@@ -87,19 +87,21 @@ worker.call # apply all the specified policies to the filtered file paths
 ```
 
 #### Slice of files
-In case you are going to scan a large number of files, is better to work in batches.  
-This is exactly why the `Worker` class accept a `slice` attribute to distribute the work and avoid saturating the resources used by the specified policies:
+In case you are going to scan a large number of files, it is better to work in batches.  
+The `Worker` constructor accepts a `slice` attribute to better distribute loading (no sleep by default, use block syntax):
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filter: filter, policies: policies, slice: 1000)
-worker.call # call policies by slice of 1000 files
+worker = FileScanner::Worker.new(loader: loader, policies: policies, slice: 1000)
+worker.call # call policies by slice of 1000 files with default filters
 ```
 
-#### Policies by block
-In case you prefer to specify the policies as a block yielding the files slice, you can omit the `policies` argument at all:
+#### Block syntax
+In case you prefer to specify the policies inside a block for a more granular control on the slice of paths, you must omit the `policies` argument and use the block syntax:
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filter: filter)
+worker = FileScanner::Worker.new(loader: loader)
 worker.call do |slice|
-  ->(slice) { FileUtils.chmod_R(0700, slice) }.call
+  policy = ->(slice) { FileUtils.chmod_R(0700, slice) }
+  policy.call
+  sleep 10 # wait 10 seconds before slurping next slice 
 end
 ```
 
@@ -107,6 +109,8 @@ end
 If you dare to trace what the worker is doing (including errors), you can specify a logger to the worker class:
 ```ruby
 my_logger = Logger.new("my_file.log")
-worker = FileScanner::Worker.new(loader: loader, filter: filter, logger: my_logger)
-worker.call # will log worker actions to my_file.log
+worker = FileScanner::Worker.new(loader: loader, logger: my_logger)
+worker.call do |slice|
+  fail "Doh!" # will log error to my_file.log and re-raise exception
+end
 ```
