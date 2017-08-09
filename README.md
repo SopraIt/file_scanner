@@ -96,3 +96,13 @@ worker.call do |slice|
   fail "Doh!" # will log error to my_file.log and re-raise exception
 end
 ```
+
+If you want to easily pass the same logger instance to the actions you are performing, it's available as the second argument of the block:
+```ruby
+require "fileutils"
+
+worker.call do |slice, logger|
+  logger.info { "going to remove #{slice.size} files from disk!" }
+  FileUtils.rm_rf(slice)
+end
+```
