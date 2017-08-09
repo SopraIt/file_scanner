@@ -6,11 +6,14 @@
 * [Usage](#usage)
   * [Loader](#loader)
   * [Filters](#filters)
-  * [Policies](#policies)
+    * [Defaults](#defaults)
+    * [Custom](#custom)
   * [Worker](#worker)
+    * [Batches](#batches)
+    * [Logger](#logger)
 
 ## Scope
-This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any default/custom filters (access time, size range) and apply a set of custom policies to them.
+This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any default/custom filters (access time, matching name and size range) and apply a set of actions via a block call.
 
 ## Motivation
 This gem is helpful to purge obsolete files or to promote relevant ones, by calling external services (CDN APIs) and/or local file system actions (copy, move, delete, etc).
@@ -42,25 +45,21 @@ loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
 ```
 
 ### Filters
-The second step is to provide the filters list to select file paths for which the `call` method is truthy.  
-Selection is done with the `any?` predicate, so also one matching filter will select the path.
+The second step is to provide the filters list to select file paths for which the `call` method is *truthy*.  
+Selection is done with the `any?` predicate, so also one matching filter will do the selection.
 
-#### Default
-If you specify no filters the existing ones will select files by:
+#### Defaults
+If you specify no filters the default ones are loaded, selecting files by:
 * checking if file is older than *30 days* 
 * checking if file size is within *0KB and 5KB*
 * checking if file *basename matches* the specified *regexp* (if any)
 
-You can update default behaviours by passing custom arguments:
+You can update default filters behaviours by passing custom arguments:
 ```ruby
 a_week_ago = FileScanner::Filters::LastAccess.new(Time.now-7*24*3600)
 one_two_mb = FileScanner::Filters::SizeRange.new(min: 1024**2, max: 2*1024**2)
 hidden = FileScanner::Filters::MatchingName.new(/^\./)
-
-filters = []
-filters << a_week_ago
-filters << one_two_mb
-filters << hidden
+filters = [a_week_ago, one_two_mb, hidden]
 ```
 
 #### Custom
@@ -69,51 +68,29 @@ It is convenient to create custom filters by creating `Proc` instances that sati
 filters << ->(file) { File.directory?(file) }
 ```
 
-### Policies
-The third step is creating custom policies objects (no defaults exist) to be applied to the list of filtered paths.  
-Again, it suffice the policy responds to the `call` method and accepts an array of paths as unique argument:
-```ruby
-require "fileutils"
-
-remove_from_disk = ->(paths) do
-  FileUtils.rm_rf(paths)
-end
-
-policies = []
-policies << remove_from_disk
-```
-
 ### Worker
-Now that you have all of the collaborators in place, you can create the `Worker` instance:
+Now that you have all of the collaborators in place, you can create the `Worker` instance to performs actions on the filtered paths:
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filters: filters, policies: policies)
-worker.call # apply all the specified policies to the filtered file paths
-```
-
-#### Slice of files
-In case you are going to scan a large number of files, it is better to work in batches.  
-The `Worker` constructor accepts a `slice` attribute to better distribute loading (no sleep by default, use block syntax):
-```ruby
-worker = FileScanner::Worker.new(loader: loader, policies: policies, slice: 1000)
-worker.call # call policies by slice of 1000 files with default filters
-```
-
-#### Block syntax
-In case you prefer to specify the policies inside a block for a more granular control on the slice of paths, you must omit the `policies` argument and use the block syntax:
-```ruby
-worker = FileScanner::Worker.new(loader: loader)
-worker.call do |slice|
-  policy = ->(slice) { FileUtils.chmod_R(0700, slice) }
-  policy.call
-  sleep 10 # wait 10 seconds before slurping next slice 
+worker = FileScanner::Worker.new(loader: loader, filters: filters)
+worker.call do |paths|
+  # do whatever you want with the paths list
 end
 ```
 
-#### Use a logger
+#### Batches
+In case you are going to scan a large number of files, it is suggested to work in batches.  
+The `Worker` constructor accepts a `slice` attribute to give you a chance to distribute loading:
+```ruby
+worker = FileScanner::Worker.new(loader: loader, slice: 1000)
+worker.call do |slice|
+  # perform action on a slice of 1000 paths
+end
+```
+
+#### Logger
 If you dare to trace what the worker is doing (including errors), you can specify a logger to the worker class:
 ```ruby
 my_logger = Logger.new("my_file.log")
-
 worker = FileScanner::Worker.new(loader: loader, logger: my_logger)
 worker.call do |slice|
   fail "Doh!" # will log error to my_file.log and re-raise exception
