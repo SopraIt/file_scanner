@@ -27,11 +27,14 @@ module FileScanner
     end
 
     private def files
-      Array(@loader.call).select do |f|
-        @filters.any? do |filter|
-          @logger.info { "applying \e[33m#{filter}\e[0m to #{File.basename(f)}" }
-          filter.call(f)
-        end
+      paths = @loader.call
+      paths.select! { |file| filter(file) } || paths
+    end
+
+    private def filter(file)
+      @filters.any? do |filter|
+        @logger.info { "applying \e[33m#{filter}\e[0m to #{File.basename(file)}" }
+        filter.call(file)
       end
     end
 
