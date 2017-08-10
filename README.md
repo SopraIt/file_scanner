@@ -109,7 +109,7 @@ end
 ```
 
 #### Factory
-You can create loader and worker instances at one time by using the available factory:
+You can create loader and worker instances at once by using the available factory:
 ```ruby
 worker = FileScanner::Worker.factory(path: ENV["HOME"], extensions: %w[html txt], filters: filters, logger: my_logger, slice: 1000)
 worker.call do |slice, logger|
