@@ -1,14 +1,21 @@
 require "logger"
+require "file_scanner/filters"
+require "file_scanner/loader"
 
 module FileScanner
   class Worker
-    attr_reader :filters
-
     def self.default_logger
       Logger.new(nil).tap do |logger|
         logger.level = Logger::ERROR
       end
     end
+
+    def self.factory(path:, extensions: [], filters: [], logger: default_logger, slice: nil)
+      loader = Loader.new(path: path, extensions: extensions)
+      new(loader: loader, filters: filters, logger: logger, slice: slice)
+    end
+
+    attr_reader :loader, :filters
 
     def initialize(loader:, filters: Filters::defaults, logger: self.class.default_logger, slice: nil)
       @loader = loader

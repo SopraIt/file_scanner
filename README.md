@@ -11,6 +11,7 @@
   * [Worker](#worker)
     * [Batches](#batches)
     * [Logger](#logger)
+    * [Factory](#factory)
 
 ## Scope
 This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any default/custom filters (access time, matching name and size range) and apply a set of actions via a block call.
@@ -83,7 +84,7 @@ The `Worker` constructor accepts a `slice` attribute to give you a chance to dis
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, slice: 1000)
 worker.call do |slice|
-  # perform action on a slice of 1000 paths
+  # perform action 1000 paths per time
 end
 ```
 
@@ -104,5 +105,14 @@ require "fileutils"
 worker.call do |slice, logger|
   logger.info { "going to remove #{slice.size} files from disk!" }
   FileUtils.rm_rf(slice)
+end
+```
+
+#### Factory
+You can create loader and worker instances at one time by using the available factory:
+```ruby
+worker = FileScanner::Worker.factory(path: ENV["HOME"], extensions: %w[html txt], filters: filters, logger: my_logger, slice: 1000)
+worker.call do |slice, logger|
+  # perform action 1000 paths per time
 end
 ```

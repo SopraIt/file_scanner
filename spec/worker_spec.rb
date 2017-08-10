@@ -5,6 +5,12 @@ describe FileScanner::Worker do
   let(:truthy) { [->(_) { true }] }
   let(:falsey) { [ ->(_) { false }] }
 
+  it "must factory an instance" do
+    worker = FileScanner::Worker.factory(path: "/", extensions: %w[gif])
+    worker.loader.must_be_instance_of FileScanner::Loader
+    worker.must_be_instance_of FileScanner::Worker
+  end
+
   it "must yield all the paths if no slice size is specified" do
     worker = FileScanner::Worker.new(loader: loader, filters: truthy)
     worker.call do |files|
