@@ -89,7 +89,7 @@ worker.call do |slice|
 end
 ```
 
-#### Eumerator
+#### Enumerator
 In case you want access the sliced enumerator directly, just do not pass a block to the method:
 ```ruby
 slices = worker.call
