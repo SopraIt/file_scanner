@@ -25,8 +25,9 @@ module FileScanner
     end
 
     def call
+      return slices unless block_given?
       slices.each do |slice|
-        yield(slice, @logger) if block_given?
+        yield(slice, @logger)
       end
     rescue StandardError => e
       @logger.error { e.message }

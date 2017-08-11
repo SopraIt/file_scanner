@@ -39,4 +39,9 @@ describe FileScanner::Worker do
       files.size.must_equal Stubs.paths.size
     end
   end
+
+  it "must return plain enumerator if no block is passed" do
+    worker = FileScanner::Worker.new(loader: loader, filters: truthy, slice: 5)
+    worker.call.must_be_instance_of Enumerator
+  end
 end

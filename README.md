@@ -10,6 +10,7 @@
     * [Custom](#custom)
   * [Worker](#worker)
     * [Batches](#batches)
+    * [Enumerator](#enumerator)
     * [Logger](#logger)
     * [Factory](#factory)
 
@@ -86,6 +87,13 @@ worker = FileScanner::Worker.new(loader: loader, slice: 1000)
 worker.call do |slice|
   # perform action 1000 paths per time
 end
+```
+
+#### Eumerator
+In case you want access the sliced enumerator directly, just do not pass a block to the method:
+```ruby
+slices = worker.call
+count = slices.flatten.size
 ```
 
 #### Logger
