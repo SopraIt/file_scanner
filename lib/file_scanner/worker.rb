@@ -41,7 +41,7 @@ module FileScanner
 
     private def filter(file)
       @filters.any? do |filter|
-        @logger.info { "applying \e[33m#{filter}\e[0m to #{File.basename(file)}" }
+        @logger.debug { "applying \e[33m#{filter}\e[0m to #{File.basename(file)}" }
         filter.call(file)
       end
     end
