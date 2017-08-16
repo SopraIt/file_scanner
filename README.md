@@ -9,7 +9,9 @@
     * [Defaults](#defaults)
     * [Custom](#custom)
   * [Worker](#worker)
+    * [Mode](#mode)
     * [Batches](#batches)
+    * [Limit](#limit)
     * [Enumerator](#enumerator)
     * [Logger](#logger)
     * [Factory](#factory)
@@ -48,7 +50,6 @@ loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
 
 ### Filters
 The second step is to provide the filters list to select file paths for which the `call` method is *truthy*.  
-Selection is done with the `any?` predicate, so also one matching filter will do the selection.
 
 #### Defaults
 If you specify no filters the default ones are loaded, selecting files by:
@@ -79,6 +80,13 @@ worker.call do |paths|
 end
 ```
 
+### Mode
+By default the worker will select paths by applying any of the matching filters: this is it, it suffice just one of the specified filters to be true to grab the path.  
+In case you want restrict paths selection by all matching filters, just specify it:
+```ruby
+worker = FileScanner::Worker.new(loader: loader, filters: filters, all: true)
+```
+
 #### Batches
 In case you are going to scan a large number of files, it is suggested to work in batches.  
 The `Worker` constructor accepts a `slice` attribute to give you a chance to distribute loading:
@@ -86,6 +94,15 @@ The `Worker` constructor accepts a `slice` attribute to give you a chance to dis
 worker = FileScanner::Worker.new(loader: loader, slice: 1000)
 worker.call do |slice|
   # perform action 1000 paths per time
+end
+```
+
+#### Limit
+In case you still are thinking the resulting paths are too many, you can specify a limit that will be observed before applying the slicing:
+```ruby
+worker = FileScanner::Worker.new(loader: loader, limit: 600)
+worker.call do |slice|
+  # perform action on just 600 paths
 end
 ```
 
@@ -119,8 +136,8 @@ end
 #### Factory
 You can create loader and worker instances at once by using the available factory:
 ```ruby
-worker = FileScanner::Worker.factory(path: ENV["HOME"], extensions: %w[html txt], filters: filters, logger: my_logger, slice: 1000)
+worker = FileScanner::Worker.factory(path: ENV["HOME"], extensions: %w[html txt], filters: filters, all: true, slice: 1000, limit: 7500, logger: my_logger)
 worker.call do |slice, logger|
-  # perform action 1000 paths per time
+  # perform action 1000 paths per time till reaching the specified limit
 end
 ```

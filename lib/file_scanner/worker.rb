@@ -4,23 +4,19 @@ require "file_scanner/loader"
 
 module FileScanner
   class Worker
-    def self.default_logger
-      Logger.new(nil).tap do |logger|
-        logger.level = Logger::ERROR
-      end
-    end
-
-    def self.factory(path:, extensions: [], filters: [], logger: default_logger, slice: nil)
+    def self.factory(path:, extensions: [], filters: [], all: false, slice: nil, limit: -1, logger: Logger.new(nil))
       loader = Loader.new(path: path, extensions: extensions)
-      new(loader: loader, filters: filters, logger: logger, slice: slice)
+      new(loader: loader, filters: filters,  slice: slice, all: all, limit: limit, logger: logger)
     end
 
     attr_reader :loader, :filters
 
-    def initialize(loader:, filters: Filters::defaults, logger: self.class.default_logger, slice: nil)
+    def initialize(loader:, filters: Filters::defaults, all: false, slice: nil, limit: -1, logger: Logger.new(nil))
       @loader = loader
       @filters = filters
+      @all = !!all
       @slice = slice.to_i
+      @limit = limit.to_i
       @logger = logger
     end
 
@@ -34,21 +30,36 @@ module FileScanner
       raise e
     end
 
+    private def fetch_mode(mode)
+      return :any? unless @filters.respond_to?(mode)
+      mode
+    end
+
     private def files
       paths = @loader.call
       paths.select! { |file| filter(file) } || paths
     end
 
+    private def limit
+      return files if @limit <= 0
+      files.first(@limit)
+    end
+
+    private def mode
+      return :all? if @all
+      :any?
+    end
+
     private def filter(file)
-      @filters.any? do |filter|
-        @logger.debug { "applying \e[33m#{filter}\e[0m to #{File.basename(file)}" }
+      @filters.send(mode) do |filter|
+        @logger.debug { "selecting by \e[33m#{mode}\e[0m with filter \e[33m#{filter}\e[0m on #{File.basename(file)}" }
         filter.call(file)
       end
     end
 
     private def slices
-      return [files] if @slice.zero?
-      files.each_slice(@slice)
+      return [limit] if @slice.zero?
+      limit.each_slice(@slice)
     end
   end
 end
