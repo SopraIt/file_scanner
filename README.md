@@ -17,7 +17,7 @@
     * [Factory](#factory)
 
 ## Scope
-This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any default/custom filters (access time, matching name and size range) and apply a set of actions via a block call.
+This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any/all default/custom filters (access time, matching name and size range) and apply a set of actions via a block call.
 
 ## Motivation
 This gem is helpful to purge obsolete files or to promote relevant ones, by calling external services (CDN APIs) and/or local file system actions (copy, move, delete, etc).
