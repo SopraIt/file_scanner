@@ -98,11 +98,11 @@ end
 ```
 
 #### Limit
-In case you still are thinking the resulting paths are too many, you can specify a limit that will be observed before applying the slicing:
+In case you are still concerned about the selected paths number, you can limit it before applying the slicing (if any):
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, limit: 600)
+worker = FileScanner::Worker.new(loader: loader, slice: 1000, limit: 7500)
 worker.call do |slice|
-  # perform action on just 600 paths
+  # perform action 1000 paths per time till reaching the specified limit
 end
 ```
 
