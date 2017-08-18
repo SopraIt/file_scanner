@@ -1,12 +1,15 @@
 module FileScanner
   class Loader
-    def initialize(path:, extensions: [])
+    def initialize(path:, extensions: [], limit: -1)
       @path = File.expand_path(path)
       @extensions = extensions
+      @limit = limit.to_i
     end
 
     def call
-      Dir.glob(files_path)
+      paths = Dir.glob(files_path)
+      return paths if @limit <= 0
+      paths.first(@limit)
     end
 
     private def files_path

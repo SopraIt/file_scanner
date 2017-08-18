@@ -5,18 +5,17 @@ require "file_scanner/loader"
 module FileScanner
   class Worker
     def self.factory(path:, extensions: [], filters: [], all: false, slice: nil, limit: -1, logger: Logger.new(nil))
-      loader = Loader.new(path: path, extensions: extensions)
-      new(loader: loader, filters: filters,  slice: slice, all: all, limit: limit, logger: logger)
+      loader = Loader.new(path: path, extensions: extensions, limit: limit)
+      new(loader: loader, filters: filters,  slice: slice, all: all, logger: logger)
     end
 
     attr_reader :loader, :filters
 
-    def initialize(loader:, filters: Filters::defaults, all: false, slice: nil, limit: -1, logger: Logger.new(nil))
+    def initialize(loader:, filters: Filters::defaults, all: false, slice: nil, logger: Logger.new(nil))
       @loader = loader
       @filters = filters
       @all = !!all
       @slice = slice.to_i
-      @limit = limit.to_i
       @logger = logger
     end
 
@@ -35,14 +34,9 @@ module FileScanner
       mode
     end
 
-    private def files
-      paths = @loader.call
-      paths.select! { |file| filter(file) } || paths
-    end
-
-    private def limit
-      return files if @limit <= 0
-      files.first(@limit)
+    private def filtered
+      files = @loader.call
+      files.select! { |file| filter(file) } || files
     end
 
     private def mode
@@ -58,8 +52,8 @@ module FileScanner
     end
 
     private def slices
-      return [limit] if @slice.zero?
-      limit.each_slice(@slice)
+      return [filtered] if @slice.zero?
+      filtered.each_slice(@slice)
     end
   end
 end

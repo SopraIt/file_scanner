@@ -24,4 +24,9 @@ describe FileScanner::Loader do
     instance = FileScanner::Loader.new(path: path, extensions: %w[jpg gif])
     instance.call.sort.must_equal Stubs.paths.sort
   end
+
+  it "must limit files by specified number" do
+    instance = FileScanner::Loader.new(path: path, extensions: %w[jpg gif], limit: 7)
+    instance.call.size.must_equal 7
+  end
 end

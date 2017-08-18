@@ -98,11 +98,11 @@ end
 ```
 
 #### Limit
-In case you are still concerned about the selected paths number, you can limit it before applying the slicing (if any):
+In case you are going to apply some heavy filtering upon the selected files (i.e. reading the file in memory to get some creepy data), you can found helpful to limit the number of retuned paths before applying any filtering:
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, slice: 1000, limit: 7500)
+worker = FileScanner::Worker.new(loader: loader, slice: 1000, limit: 6000)
 worker.call do |slice|
-  # perform action 1000 paths per time till reaching the specified limit
+  # filters applied on a maximum of 6000 paths, working a slice of 1000 files per time
 end
 ```
 
@@ -136,8 +136,8 @@ end
 #### Factory
 You can create loader and worker instances at once by using the available factory:
 ```ruby
-worker = FileScanner::Worker.factory(path: ENV["HOME"], extensions: %w[html txt], filters: filters, all: true, slice: 1000, limit: 7500, logger: my_logger)
+worker = FileScanner::Worker.factory(path: ENV["HOME"], extensions: %w[html txt], filters: filters, all: true, slice: 1000, limit: 6000, logger: my_logger)
 worker.call do |slice, logger|
-  # perform action 1000 paths per time till reaching the specified limit
+  # filters applied on a maximum of 6000 paths, working a slice of 1000 files per time
 end
 ```

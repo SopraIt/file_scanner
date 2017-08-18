@@ -7,7 +7,7 @@ describe FileScanner::Worker do
   let(:mixed) { truthy.concat(falsey) }
 
   it "must factory an instance" do
-    worker = FileScanner::Worker.factory(path: "/", extensions: %w[gif])
+    worker = FileScanner::Worker.factory(path: "/", extensions: %w[gif], limit: 12)
     worker.loader.must_be_instance_of FileScanner::Loader
     worker.must_be_instance_of FileScanner::Worker
   end
@@ -20,7 +20,7 @@ describe FileScanner::Worker do
   end
   
   it "must select files by any matching filter" do
-    worker = FileScanner::Worker.new(loader: loader, filters: mixed, limit: "none")
+    worker = FileScanner::Worker.new(loader: loader, filters: mixed)
     worker.call do |files|
       files.size.must_equal Stubs.paths.size
     end
@@ -50,10 +50,5 @@ describe FileScanner::Worker do
     worker.call do |files|
       files.size.must_equal 5
     end
-  end
-
-  it "must limit files by specified number" do
-    worker = FileScanner::Worker.new(loader: loader, filters: truthy, limit: 13)
-    worker.call.to_a.flatten.size.must_equal 13
   end
 end
