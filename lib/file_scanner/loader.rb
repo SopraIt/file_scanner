@@ -9,7 +9,7 @@ module FileScanner
     def call
       paths = Dir.glob(files_path)
       return paths if @limit <= 0
-      paths.first(@limit)
+      paths.sample(@limit)
     end
 
     private def files_path
