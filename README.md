@@ -65,7 +65,7 @@ filters = [a_week_ago, one_two_mb, hidden]
 ```
 
 #### Custom
-It is convenient to create custom filters by creating `Proc` instances that satisfy the `callable` protocol:
+It is convenient to create custom filters by using `Proc` instances that satisfy the `callable` protocol:
 ```ruby
 filters << ->(file) { File.directory?(file) }
 ```
