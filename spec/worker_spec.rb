@@ -6,12 +6,6 @@ describe FileScanner::Worker do
   let(:falsey) { [ ->(_) { false }] }
   let(:mixed) { truthy.concat(falsey) }
 
-  it "must factory an instance" do
-    worker = FileScanner::Worker.factory(path: "/", extensions: %w[gif], limit: 12)
-    worker.loader.must_be_instance_of FileScanner::Loader
-    worker.must_be_instance_of FileScanner::Worker
-  end
-
   it "must yield an empty array if no filter matches" do
     worker = FileScanner::Worker.new(loader: loader, filters: falsey)
     worker.call do |files|
