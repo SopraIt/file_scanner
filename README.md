@@ -11,6 +11,7 @@
     * [Enumerator](#enumerator)
     * [Block](#block)
     * [Mode](#mode)
+    * [Check](#check)
     * [Logger](#logger)
 
 ## Scope
@@ -81,9 +82,18 @@ end
 
 #### Mode
 By default the worker will select paths by applying any of the matching filters: this is it, it suffice just one of the specified filters to be true to grab the path.  
-In case you want restrict paths selection by all matching filters, just specify it:
+In case you want restrict paths selection by all matching filters, just specify the `all` option:
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, filters: filters, all: true)
+worker.call # will filter by applying all? predicate
+```
+
+#### Check
+By default the worker will scan for both directories and files. 
+In case you want restrict paths selection by files only, just specify the `check` option:
+```ruby
+worker = FileScanner::Worker.new(loader: loader, filters: filters, check: true)
+worker.call # will skip directories
 ```
 
 #### Logger

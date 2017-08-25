@@ -1,6 +1,7 @@
 require "helper"
 
 describe FileScanner::Worker do
+  before { Stubs.dirs }
   let(:truthy) { [->(_) { true }] }
   let(:falsey) { [ ->(_) { false }] }
   let(:mixed) { truthy.concat(falsey) }
@@ -35,6 +36,13 @@ describe FileScanner::Worker do
     worker = FileScanner::Worker.new(path: Stubs.dirname, filters: truthy, slice: 5)
     worker.call do |slice|
       (slice.size <= 5).must_equal true
+    end
+  end
+
+  it "must filter slice of files by checking them first" do
+    worker = FileScanner::Worker.new(path: Stubs.dirname, filters: truthy, check: true)
+    worker.call do |slice|
+      slice.all? { |file| FileTest.file?(file) }.must_equal true
     end
   end
 end

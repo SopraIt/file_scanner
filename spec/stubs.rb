@@ -17,6 +17,12 @@ module Stubs
   end
 
   def dirname
-    files.map { |f| File.dirname(f) }.uniq.last
+    @dirname ||= files.map { |f| File.dirname(f) }.uniq.last
+  end
+
+  def dirs(n = 10)
+    n.times.map do |i|
+      Dir.mktmpdir("tmp_#{i}")
+    end
   end
 end

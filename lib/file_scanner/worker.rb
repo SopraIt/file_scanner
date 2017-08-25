@@ -14,11 +14,13 @@ module FileScanner
                    filters: Filters::defaults, 
                    slice: SLICE, 
                    all: false, 
+                   check: false,
                    logger: Logger.new(nil))
       @path = File.expand_path(path)
       @filters = filters
       @slice = slice.to_i
       @mode = mode(all)
+      @check = check
       @logger = logger
     end
 
@@ -36,6 +38,11 @@ module FileScanner
       all ? ALL : ANY
     end
 
+    private def valid?(file)
+      return true unless @check
+      FileTest.file?(file)
+    end
+
     private def filter(file)
       @filters.send(@mode) do |filter|
         @logger.debug { "filtering by \e[33m#{@mode}\e[0m with \e[33m#{filter}\e[0m on #{File.basename(file)}" }
@@ -48,7 +55,7 @@ module FileScanner
     end
 
     private def filtered
-      paths.lazy.select { |file| filter(file) }
+      paths.lazy.select { |file| valid?(file) && filter(file) }
     end
 
     private def slices
