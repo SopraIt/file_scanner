@@ -4,15 +4,13 @@
 * [Motivation](#motivation)
 * [Installation](#installation)
 * [Usage](#usage)
-  * [Loader](#loader)
   * [Filters](#filters)
     * [Defaults](#defaults)
     * [Custom](#custom)
   * [Worker](#worker)
-    * [Mode](#mode)
-    * [Batches](#batches)
-    * [Limit](#limit)
     * [Enumerator](#enumerator)
+    * [Block](#block)
+    * [Mode](#mode)
     * [Logger](#logger)
 
 ## Scope
@@ -39,16 +37,8 @@ gem install file_scanner
 
 ## Usage
 
-### Loader
-The first step is to create a `Loader` instance by specifying the path where the files need to be scanned with optional extensions list:
-```ruby
-require "file_scanner"
-
-loader = FileScanner::Loader.new(path: ENV["HOME"], extensions: %w[html txt])
-```
-
 ### Filters
-The second step is to provide the filters list to select file paths for which the `call` method is *truthy*.  
+The first step is to provide the filters list to select file paths for which the `call` method is *truthy*.  
 
 #### Defaults
 If you specify no filters the default ones are loaded, selecting files by:
@@ -71,45 +61,29 @@ filters << ->(file) { File.directory?(file) }
 ```
 
 ### Worker
-Now that you have all of the collaborators in place, you can create the `Worker` instance to performs actions on the filtered paths:
+The second step is to create the `Worker` instance by providing the path to scan and the list of filters to apply.  
+
+#### Enumerator
+The `call` method of the worker return a lazy enumerator with the filtered elements, sliced by the specified number (default to 1000):
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filters: filters)
-worker.call do |paths|
-  # do whatever you want with the paths list
+worker = FileScanner::Worker.new(path: "~/Downloads", filters: filters, slice: 35)
+p worker.call
+=> #<Enumerator::Lazy: ...
+```
+
+#### Block
+To perform actions on each of the sliced paths just pass a block:
+```ruby
+worker.call do |slice|
+  # perform actions on a slice of at max 35 elements
 end
 ```
 
-### Mode
+#### Mode
 By default the worker will select paths by applying any of the matching filters: this is it, it suffice just one of the specified filters to be true to grab the path.  
 In case you want restrict paths selection by all matching filters, just specify it:
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, filters: filters, all: true)
-```
-
-#### Batches
-In case you are going to scan a large number of files, it is suggested to work in batches.  
-The `Worker` constructor accepts a `slice` attribute to give you a chance to distribute loading:
-```ruby
-worker = FileScanner::Worker.new(loader: loader, slice: 1000)
-worker.call do |slice|
-  # perform action 1000 paths per time
-end
-```
-
-#### Limit
-In case you are going to apply some heavy filtering upon the selected files (i.e. reading the file in memory to get some creepy data), you can found helpful to limit the number of retuned paths before applying any filtering:
-```ruby
-worker = FileScanner::Worker.new(loader: loader, slice: 1000, limit: 6000)
-worker.call do |slice|
-  # filters applied on a maximum of 6000 paths, working a slice of 1000 files per time
-end
-```
-
-#### Enumerator
-In case you want access the sliced enumerator directly, just do not pass a block to the method:
-```ruby
-slices = worker.call
-count = slices.flatten.size
 ```
 
 #### Logger

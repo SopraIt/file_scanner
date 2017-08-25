@@ -1,16 +1,24 @@
+require "find"
 require "logger"
 require "file_scanner/filters"
-require "file_scanner/loader"
 
 module FileScanner
   class Worker
-    attr_reader :loader, :filters
+    SLICE = 1000
+    ALL = :all?
+    ANY = :any?
 
-    def initialize(loader:, filters: Filters::defaults, all: false, slice: nil, logger: Logger.new(nil))
-      @loader = loader
+    attr_reader :filters
+
+    def initialize(path:, 
+                   filters: Filters::defaults, 
+                   slice: SLICE, 
+                   all: false, 
+                   logger: Logger.new(nil))
+      @path = File.expand_path(path)
       @filters = filters
-      @mode = mode(all)
       @slice = slice.to_i
+      @mode = mode(all)
       @logger = logger
     end
 
@@ -24,13 +32,8 @@ module FileScanner
       raise e
     end
 
-    private def filtered
-      @loader.call.select { |file| filter(file) }
-    end
-
     private def mode(all)
-      return :all? if all
-      :any?
+      all ? ALL : ANY
     end
 
     private def filter(file)
@@ -40,8 +43,15 @@ module FileScanner
       end
     end
 
+    private def paths
+      Find.find(@path)
+    end
+
+    private def filtered
+      paths.lazy.select { |file| filter(file) }
+    end
+
     private def slices
-      return [filtered] if @slice.zero?
       filtered.each_slice(@slice)
     end
   end
