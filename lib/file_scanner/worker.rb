@@ -4,7 +4,6 @@ require "file_scanner/filters"
 
 module FileScanner
   class Worker
-    SLICE = 1000
     ALL = :all?
     ANY = :any?
 
@@ -12,23 +11,18 @@ module FileScanner
 
     def initialize(path:, 
                    filters: Filters::defaults, 
-                   slice: SLICE, 
                    all: false, 
                    check: false,
                    logger: Logger.new(nil))
       @path = File.expand_path(path)
       @filters = filters
-      @slice = slice.to_i
       @mode = mode(all)
       @check = check
       @logger = logger
     end
 
     def call
-      return slices unless block_given?
-      slices.each do |slice|
-        yield(slice, @logger)
-      end
+      paths.lazy.select { |file| valid?(file) && filter(file) }
     rescue StandardError => e
       @logger.error { e.message }
       raise e
@@ -52,14 +46,6 @@ module FileScanner
 
     private def paths
       Find.find(@path)
-    end
-
-    private def filtered
-      paths.lazy.select { |file| valid?(file) && filter(file) }
-    end
-
-    private def slices
-      filtered.each_slice(@slice)
     end
   end
 end

@@ -9,16 +9,17 @@
     * [Custom](#custom)
   * [Worker](#worker)
     * [Enumerator](#enumerator)
-    * [Block](#block)
+    * [Consuming results](#consuming-results)
     * [Mode](#mode)
     * [Check](#check)
     * [Logger](#logger)
 
 ## Scope
-This gem is aimed to collect a set of file paths starting by a wildcard rule, filter them by any/all default/custom filters (access time, matching name and size range) and apply a set of actions via a block call.
+This gem is aimed to lazily collect a list of files by path and a set of filters.
 
 ## Motivation
-This gem is helpful to purge obsolete files or to promote relevant ones, by calling external services (CDN APIs) and/or local file system actions (copy, move, delete, etc).
+This gem is helpful to purge obsolete files or to promote relevant ones, by calling external services (CDN APIs) and/or local file system actions (copy, move, delete, etc).  
+By working lazily, this library is aimed to work with a subset of large files list: just remember to apply a subset method to the final enumerator.
 
 ## Installation
 Add this line to your application's Gemfile:
@@ -65,19 +66,17 @@ filters << ->(file) { File.directory?(file) }
 The second step is to create the `Worker` instance by providing the path to scan and the list of filters to apply.  
 
 #### Enumerator
-The `call` method of the worker return a lazy enumerator with the filtered elements, sliced by the specified number (default to 1000):
+The `call` method of the worker return a lazy enumerator with the filtered elements:
 ```ruby
 worker = FileScanner::Worker.new(path: "~/Downloads", filters: filters, slice: 35)
 p worker.call
 => #<Enumerator::Lazy: ...
 ```
 
-#### Block
-To perform actions on each of the sliced paths just pass a block:
+#### Consuming results
+To leverage on the lazy behaviour remember to call a subset operator on the resulting enumerator:
 ```ruby
-worker.call do |slice|
-  # perform actions on a slice of at max 35 elements
-end
+worker.call.take(1000)
 ```
 
 #### Mode
@@ -101,17 +100,4 @@ If you dare to trace what the worker is doing (including errors), you can specif
 ```ruby
 my_logger = Logger.new("my_file.log")
 worker = FileScanner::Worker.new(loader: loader, logger: my_logger)
-worker.call do |slice|
-  fail "Doh!" # will log error to my_file.log and re-raise exception
-end
-```
-
-If you want to easily pass the same logger instance to the actions you are performing, it's available as the second argument of the block:
-```ruby
-require "fileutils"
-
-worker.call do |slice, logger|
-  logger.info { "going to remove #{slice.size} files from disk!" }
-  FileUtils.rm_rf(slice)
-end
 ```

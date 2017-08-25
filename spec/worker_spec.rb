@@ -13,36 +13,23 @@ describe FileScanner::Worker do
 
   it "must yield an empty array if no filter matches" do
     worker = FileScanner::Worker.new(path: Stubs.dirname, filters: falsey)
-    worker.call do |slice|
-      slice.must_be_empty
-    end
+    worker.call.to_a.must_be_empty
   end
   
   it "must select files by any matching filter" do
     worker = FileScanner::Worker.new(path: Stubs.dirname, filters: mixed)
-    worker.call do |slice|
-      slice.wont_be_empty
-    end
+    worker.call.to_a.wont_be_empty
   end
 
   it "must select files by all matching filter" do
     worker = FileScanner::Worker.new(path: Stubs.dirname, filters: mixed, all: true)
-    worker.call do |slice|
-      slice.must_be_empty
-    end
-  end
-
-  it "must yield slice of files when specified" do
-    worker = FileScanner::Worker.new(path: Stubs.dirname, filters: truthy, slice: 5)
-    worker.call do |slice|
-      (slice.size <= 5).must_equal true
-    end
+    worker.call.to_a.must_be_empty
   end
 
   it "must filter slice of files by checking them first" do
     worker = FileScanner::Worker.new(path: Stubs.dirname, filters: truthy, check: true)
-    worker.call do |slice|
-      slice.all? { |file| FileTest.file?(file) }.must_equal true
+    worker.call.each do |file|
+      FileTest.file?(file).must_equal true
     end
   end
 end
