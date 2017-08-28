@@ -7,14 +7,14 @@ module FileScanner
     ALL = :all?
     ANY = :any?
 
-    attr_reader :filters
+    attr_reader :path, :filters
 
     def initialize(path:, 
                    filters: Filters::defaults, 
                    all: false, 
                    filecheck: false,
                    logger: Logger.new(nil))
-      @path = File.expand_path(path)
+      @path = File.expand_path(path) << File::SEPARATOR
       @filters = filters
       @mode = mode(all)
       @filecheck = filecheck

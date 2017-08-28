@@ -7,6 +7,10 @@ describe FileScanner::Worker do
   let(:mixed) { truthy.concat(falsey) }
   let(:worker) { FileScanner::Worker.new(path: Stubs.dirname, filters: truthy) }
 
+  it "must append file separator to path" do
+    worker.path.end_with?(File::SEPARATOR).must_equal true
+  end
+
   it "must return a lazy enumerator when no block is passed" do
     worker.call.must_be_instance_of Enumerator::Lazy
   end
