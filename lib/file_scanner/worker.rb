@@ -22,7 +22,7 @@ module FileScanner
     end
 
     def call
-      @logger.info { "scanning \e[33m#{path}\e[0m" }
+      @logger.info { "scanning \e[1m#{@path}\e[0m..." }
       @logger.debug { "skipping directories" } if @filecheck
       @logger.debug { "applying \e[36m#{@filters.size}\e[0m filters by \e[35m#{@mode}\e[0m" }
       paths.lazy.select { |file| valid?(file) && filter(file) }
