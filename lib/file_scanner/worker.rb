@@ -22,7 +22,9 @@ module FileScanner
     end
 
     def call
+      @logger.info { "scanning \e[33m#{path}\e[0m" }
       @logger.debug { "skipping directories" } if @filecheck
+      @logger.debug { "applying \e[36m#{@filters.size}\e[0m filters by \e[35m#{@mode}\e[0m" }
       paths.lazy.select { |file| valid?(file) && filter(file) }
     rescue StandardError => e
       @logger.error { e.message }
@@ -39,9 +41,8 @@ module FileScanner
     end
 
     private def filter(file)
-      @logger.debug { "filters applied by \e[35m#{@mode}\e[0m" }
       @filters.send(@mode) do |filter|
-        @logger.debug { "filtering on \e[33m#{File.basename(file)}\e[0m" }
+        @logger.debug { "filtering \e[37m#{File.basename(file)}\e[0m" }
         filter.call(file)
       end
     end
