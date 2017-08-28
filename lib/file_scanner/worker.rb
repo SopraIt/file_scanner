@@ -12,16 +12,17 @@ module FileScanner
     def initialize(path:, 
                    filters: Filters::defaults, 
                    all: false, 
-                   check: false,
+                   filecheck: false,
                    logger: Logger.new(nil))
       @path = File.expand_path(path)
       @filters = filters
       @mode = mode(all)
-      @check = check
+      @filecheck = filecheck
       @logger = logger
     end
 
     def call
+      @logger.debug { "skipping directories" } if @filecheck
       paths.lazy.select { |file| valid?(file) && filter(file) }
     rescue StandardError => e
       @logger.error { e.message }
@@ -33,13 +34,14 @@ module FileScanner
     end
 
     private def valid?(file)
-      return true unless @check
+      return true unless @filecheck
       FileTest.file?(file)
     end
 
     private def filter(file)
+      @logger.debug { "filters applied by \e[35m#{@mode}\e[0m" }
       @filters.send(@mode) do |filter|
-        @logger.debug { "filtering by \e[33m#{@mode}\e[0m with \e[33m#{filter}\e[0m on #{File.basename(file)}" }
+        @logger.debug { "filtering on \e[33m#{File.basename(file)}\e[0m" }
         filter.call(file)
       end
     end

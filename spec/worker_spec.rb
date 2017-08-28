@@ -26,8 +26,8 @@ describe FileScanner::Worker do
     worker.call.to_a.must_be_empty
   end
 
-  it "must filter slice of files by checking them first" do
-    worker = FileScanner::Worker.new(path: Stubs.dirname, filters: truthy, check: true)
+  it "must filter slice of files by skipping directories" do
+    worker = FileScanner::Worker.new(path: Stubs.dirname, filters: truthy, filecheck: true)
     worker.call.each do |file|
       FileTest.file?(file).must_equal true
     end

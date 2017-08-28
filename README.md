@@ -11,7 +11,7 @@
     * [Enumerator](#enumerator)
     * [Consuming results](#consuming-results)
     * [Mode](#mode)
-    * [Check](#check)
+    * [File check](#file-check)
     * [Logger](#logger)
 
 ## Scope
@@ -48,7 +48,7 @@ If you specify no filters the default ones are loaded, selecting files by:
 * checking if file size is within *0KB and 5KB*
 * checking if file *basename matches* the specified *regexp* (if any)
 
-You can update default filters behaviours by passing custom arguments:
+You can update default filters behaviour by passing custom arguments:
 ```ruby
 a_week_ago = FileScanner::Filters::LastAccess.new(Time.now-7*24*3600)
 one_two_mb = FileScanner::Filters::SizeRange.new(min: 1024**2, max: 2*1024**2)
@@ -74,25 +74,27 @@ p worker.call
 ```
 
 #### Consuming results
-To leverage on the lazy behaviour remember to call a subset operator on the resulting enumerator:
+To leverage on the lazy behaviour remember to call a subset method on the resulting enumerator:
 ```ruby
-worker.call.take(1000)
+worker.call.take(1000).each do |file|
+  # perform action on filtered files
+end
 ```
 
 #### Mode
-By default the worker will select paths by applying any of the matching filters: this is it, it suffice just one of the specified filters to be true to grab the path.  
+By default the worker does select paths by applying any of the matching filters: it suffice just one of the filters to match to grab the path.  
 In case you want restrict paths selection by all matching filters, just specify the `all` option:
 ```ruby
 worker = FileScanner::Worker.new(loader: loader, filters: filters, all: true)
 worker.call # will filter by applying all? predicate
 ```
 
-#### Check
-By default the worker will scan for both directories and files. 
-In case you want restrict paths selection by files only, just specify the `check` option:
+#### File check
+By default the worker does collect both directories and files. 
+In case you want restrict selction by files only, just specify the `filecheck` option:
 ```ruby
-worker = FileScanner::Worker.new(loader: loader, filters: filters, check: true)
-worker.call # will skip directories
+worker = FileScanner::Worker.new(loader: loader, filters: filters, filecheck: true)
+worker.call # skip directories
 ```
 
 #### Logger
